@@ -32,7 +32,6 @@ can_ok('Object::Botox', qw(new) );
 	1;
 }
    
-   
 {	package Child;
 	
 	use Data::Dumper;
