@@ -2,14 +2,16 @@
 
 use strict;
 
-use Test::More tests => 15; 
+use Test::More tests => 15;
 
-use_ok( 'Botox', qw(new) );
-can_ok('Botox', qw(new) );
+use lib qw(../../);
+
+use_ok( 'Object::Botox', qw(new) );
+can_ok('Object::Botox', qw(new) );
 
 {	package Parent;
 
-	use Botox qw(new);
+	use Object::Botox qw(new);
 		
 	our $object_prototype = { 'prop1_ro' => 1 , 'prop2' => 'abcde' };
 	
@@ -29,6 +31,7 @@ can_ok('Botox', qw(new) );
 	}
 	1;
 }
+   
    
 {	package Child;
 	

@@ -1,6 +1,8 @@
-{{{package Leech;
+package WWW::Leech;
 
 use strict;
+use warnings;
+
 use utf8;
 
 our $VERSION = 1.2.5;
@@ -9,7 +11,7 @@ use WWW::Curl::Multi;
 
 use autouse 'Carp' => qw(carp croak);
 
-use Botox qw(:all);
+use Object::Botox qw(:all);
 
 my $curlm = new WWW::Curl::Multi;
 
