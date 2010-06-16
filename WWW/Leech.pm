@@ -11,9 +11,9 @@ use WWW::Curl::Multi;
 
 use autouse 'Carp' => qw(carp croak);
 
-use Object::Botox qw(:all);
+use Object::Botox qw(new);
 
-my $curlm = new WWW::Curl::Multi;
+my $curlm = WWW::Curl::Multi->new();
 
 my ($do_download, $get_useragent, $do_mass_download);
 
@@ -35,7 +35,7 @@ sub suck{
 		# один элемент в массиве - не пачка, работаем как с единицей
 		return &$do_download( shift @$url ) if ( $#$url == 0 );
 		
-		print 'Downloading array ['.join(', ', @$url).']';
+		print 'Downloading array ['.join(', ', @$url).']',"\n";
 		return &$do_mass_download( $url );
 	}
 	elsif ( !ref $url ){
@@ -65,7 +65,7 @@ $do_download = sub ($) {
 	my ( $data, $url ) = ( undef, @_ ) ;
 
 # придется перенести создание объекта в процедуру, иначе получим замыкание в Multi
-	my $curl = new WWW::Curl::Easy;
+	my $curl = WWW::Curl::Easy->new();
 # вот сюда пишем полученные данные	
 	open ( my $fh, '>', \$data );
 
@@ -271,13 +271,12 @@ $get_useragent = sub (){
 'Mozilla/5.0 (Windows; U; Windows NT 5.1; pl; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2 GTB6 (.NET CLR 3.5.30729)',
 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.7; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2',  ];
 
-return $ul->[int(rand($#$ul+1))];
+return $ul->[int(rand($#$ul))];
 
 };
 
 
 1;
-}}}
 
 
 __END__

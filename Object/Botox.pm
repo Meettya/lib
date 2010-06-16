@@ -21,8 +21,9 @@ sub new{
 $prototyping = sub{
 	my $self = shift;
 	my $isa = (ref $self )."\::ISA";
-	# we are known what is it for
-	no strict 'refs';  
+	
+	no strict 'refs'; 		# we are known what is it for
+	no warnings 'once';		# so, if you not use 'object_prototype' - it`s you right
 	# YES, just push object class to grandparents list AND get ALL prior object _proptotype one by one 
 	my $class_list = [ @$isa ,( ref $self ) ];
 
