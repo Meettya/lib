@@ -2,7 +2,6 @@ package WWW::Leech;
 
 use strict;
 use warnings;
-
 use utf8;
 
 our $VERSION = 1.2.5;
@@ -21,29 +20,27 @@ my ($do_download, $get_useragent, $do_mass_download);
 Method: suck
 	скачивает данные
 Parameter:
-    $url|[$url]
-    скаляр или массив
+    $url|($url,)
+    скаляр или список
 Returns:
-	{url => {status, data}
+	{ url => {status, data} }
 	хеш с данными
 =cut
 
 sub suck{
 	
-	my ( $this, $url ) = @_ ;
-	if ( ref $url eq 'ARRAY' ){
-		# один элемент в массиве - не пачка, работаем как с единицей
-		return &$do_download( shift @$url ) if ( $#$url == 0 );
-		
-		print 'Downloading array ['.join(', ', @$url).']',"\n";
-		return &$do_mass_download( $url );
+	my ( $self, @url ) = @_ ;
+
+	if ( $#url == 0 ){
+		print $url[0],"\n";
+		return &$do_download( $url[0] );
 	}
-	elsif ( !ref $url ){
-		print $url;
-		return &$do_download( $url );
+	elsif ( $#url > 0 ){
+		print 'Downloading array ['.join(', ', @url).']',"\n";
+		return &$do_mass_download( \@url );
 	}
 	else {
-		croak 'Wrong type of \'url\' - array or scalar permited only!';
+		croak 'One link at last needed!';
 	}
 }
 
@@ -121,9 +118,9 @@ $do_mass_download = sub ($) {
 	while ( $curl_id ){
 	
 		my $active_transfers = $curlm->perform;
-		if ($active_transfers != $curl_id) {
-			while (my ($id,$return_value) = $curlm->info_read) {
-				if ($id) {
+		if ( $active_transfers != $curl_id ) {
+			while ( my ( $id ) = $curlm->info_read ) {
+				if ( $id ) {
 						--$curl_id;
 						my $actual_easy_handle = $easy->{$id}{curl};
 						my $response = $actual_easy_handle->getinfo(CURLINFO_RESPONSE_CODE);
