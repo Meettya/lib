@@ -60,7 +60,7 @@ can_ok('Object::Botox', qw(new) );
 					"Persistent data test pass");	
 	};
 		
-	my $foo = new Parent;
+	my $foo = new Parent();
 	print "\nFirst object test:\n";
 	&$make_test($foo,1);
 
@@ -99,7 +99,7 @@ can_ok('Object::Botox', qw(new) );
 
 
 	use Data::Dumper;
-	my $baz = new Child;
+	my $baz = new Child({prop1 => 888888, prop2 => 333});
 	
 	print Dumper($baz);
 

@@ -3,18 +3,20 @@ package Object::Botox;
 use strict;
 use warnings;
 
-our $VERSION = 0.9.5;
+our $VERSION = 0.9.8;
 
 use Exporter 'import';
 our @EXPORT_OK = qw(new);
 
-my ( $prepare, $prototyping );
+my ( $prepare, $prototyping, $setup );
 my $err_text = qq(Can`t change RO properties |%s| to |%s| in object %s from %s at %s line %d\n);
+my $err_text_2 = qq(Haven`t properties |%s|, can't set to |%s| in object %s from %s at %s line %d\n);
 
 sub new{
     my $invocant = shift;
     my $self = bless( {}, ref $invocant || $invocant ); # Object or class name  
 	&$prototyping( $self );
+	&$setup( $self, @_ ) if @_;
 	return $self;
 }
 
@@ -65,6 +67,18 @@ $prepare = sub{
 
 };
 
+$setup = sub{
+	my $self = shift;
+
+	# yes! (prop1=>aaa,prop2=>bbb) AND ({prop1=>aaa,prop2=>bbb}) ARE allowed 
+	my %prop = ref $_[0] eq 'HASH' ? %{$_[0]} : @_ ; 
+	map { $self->can( $_ ) ? $self->$_( $prop{$_} ) : 
+			die sprintf $err_text_2, $_, $prop{$_}, ref $self, caller(1) } 
+					keys %prop;
+
+};
+
+
 1;
 
 
@@ -80,7 +94,7 @@ Botox - simple implementation of Abstract Factory with prototyping and declared 
 
 =head1 VERSION
 
-B<$VERSION 0.9.5>
+B<$VERSION 0.9.8>
 
 =head1 SYNOPSIS
 
@@ -127,7 +141,7 @@ Botox - простой абстрактный конструктор, дающи
 
 	package Child;
 	
-	my $foo = new Parent;
+	my $foo = new Parent();
 		
 	1;
 
@@ -177,7 +191,7 @@ Botox - простой абстрактный конструктор, дающи
 	package GrandChild;
 
 	use Data::Dumper;
-	my $baz = new Child;
+	my $baz = new Child();
 	
 	print Dumper($baz);
 	
@@ -196,6 +210,27 @@ Botox - простой абстрактный конструктор, дающи
 	Can`t change RO properties |prop1| to |-23| in object Child from GrandChild at ./test_more.t line 84
 
 То есть мы смогли получить новый класс Child на базе Parent со свойствами обоих классов, причем в свойствах преобладают настройки прав свойств родителя и значения свойств ребенка.
+
+Кроме того, возможна дефолтная инициализация свойств объекта:
+
+	package GrandChild;
+
+	use Data::Dumper;
+	my $baz = new Child(prop1 => 99); OR ({prop1 => 99}) as you wish
+	
+	print Dumper($baz);
+
+Даст нам вот такой вывод:
+
+	$VAR1 = bless( {
+                 'Child::prop5' => 55,
+                 'Child::prop2' => 'abcde',
+                 'Child::prop1' => 99,
+                 'Child::prop8' => 'tetete'
+               }, 'Child' );
+
+При создании объекта возможно задавать значения как rw так и ro свойств(что логично).
+Попытка задать значение несуществующего свойства даст ошибку.
 
 =head1 AUTOR	
 
