@@ -14,15 +14,16 @@ use autouse 'Carp' => qw(carp croak);
 use Object::Botox qw(new);
 
 our $object_prototype = { 	
-				'agent_shuffle'	=> undef, 	# create shuffle useragent
+				'agent_shuffle'	=> undef, 	# do shuffle useragent
 					};
 
 my $curlm = WWW::Curl::Multi->new();
 
 my ($do_download, $get_useragent, $do_mass_download);
 
-# конфиг берем из файлика
-my $config = YAML::LoadFile('config.yml');
+# конфиг берем из файлика, получая из $INC полный путь к каталогу
+( my $config_path = $INC{'WWW/Leech.pm'} ) =~ s/\.pm// ;
+my $config = YAML::LoadFile( $config_path.'/config.yml' );
 my $agent_list = $config->{agent_list};
 
 
