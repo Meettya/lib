@@ -89,7 +89,7 @@ $do_download = sub ($) {
 #   my $err = $curl->errbuf;
     my $info = $curl->getinfo(CURLINFO_RESPONSE_CODE);
 	
-	return { $url => {'status' => $info, 'data' => $data }};
+	return { $url => {'status' => [$info], 'data' => $data }};
 };
 
 
@@ -126,7 +126,7 @@ $do_mass_download = sub ($) {
 						my $response = $actual_easy_handle->getinfo(CURLINFO_RESPONSE_CODE);
 						# точно, тут у нас была ссылка на скаляр, разыменовываем
 						my $data = ${$easy->{$id}{data}};
-						$result->{$url_list->[($id-1)]} = {'status' => $response,
+						$result->{$url_list->[($id-1)]} = {'status' => [$response],
 									'data' => $data };
 												
 						# вот это обязательно, а то получим перебор по памяти
