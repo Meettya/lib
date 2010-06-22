@@ -13,6 +13,10 @@ use autouse 'Carp' => qw(carp croak);
 
 use Object::Botox qw(new);
 
+our $object_prototype = { 	
+				'agent_shuffle'	=> undef, 	# create shuffle useragent
+					};
+
 my $curlm = WWW::Curl::Multi->new();
 
 my ($do_download, $get_useragent, $do_mass_download);
@@ -39,11 +43,11 @@ sub suck{
 
 	if ( $#url == 0 ){
 		print $url[0],"\n";
-		return &$do_download( $url[0] );
+		return &$do_download( $self, $url[0] );
 	}
 	elsif ( $#url > 0 ){
 		print 'Downloading array ['.join(', ', @url).']',"\n";
-		return &$do_mass_download( \@url );
+		return &$do_mass_download( $self, \@url );
 	}
 	else {
 		croak 'One link at last needed!';
@@ -63,9 +67,9 @@ Returns:
     
 =cut
 
-$do_download = sub ($) {
+$do_download = sub ($$) {
 
-	my ( $data, $url ) = ( undef, @_ ) ;
+	my ( $data, $self, $url ) = ( undef, @_ ) ;
 
 # придется перенести создание объекта в процедуру, иначе получим замыкание в Multi
 	my $curl = WWW::Curl::Easy->new();
@@ -86,7 +90,8 @@ $do_download = sub ($) {
 	$curl->setopt(CURLOPT_TIMEOUT,20);
 	
 	# 07.07.09 - добавляем UserAgent чтобы нас не банили.
-	$curl->setopt(CURLOPT_USERAGENT, &$get_useragent );
+	$curl->setopt(CURLOPT_USERAGENT, 
+		( defined $self->agent_shuffle ? &$get_useragent() : $agent_list->[0] ) );
 
 # для мульти-интерфейса нам нужен сам объект и ссылка на typoglobe, тем и отличаем
 	return ( $curl, \$data ) if wantarray;
@@ -109,13 +114,13 @@ Returns:
 
 =cut
 
-$do_mass_download = sub ($) {
-	my $url_list = shift ;
+$do_mass_download = sub ($$) {
+	my ( $self, $url_list ) = ( @_ ) ;
 	my ( $result, $curl_id, $easy );
 	
 	foreach my $url ( @$url_list ) {
 		
-		my ( $curl, $data ) = &$do_download( $url );
+		my ( $curl, $data ) = &$do_download( $self, $url );
 		$curl->setopt( CURLOPT_PRIVATE, ++$curl_id );
 		$easy->{$curl_id} = {'curl' => $curl, 'data' => $data }; #  ссылка на объект
 		$curlm->add_handle( $curl );
