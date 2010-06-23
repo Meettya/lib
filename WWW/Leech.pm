@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use utf8;
 
-our $VERSION = 1.2.5;
+our $VERSION = 1.4.5;
 use YAML;
 use WWW::Curl::Easy;
 use WWW::Curl::Multi;
@@ -26,7 +26,6 @@ my ($do_download, $get_useragent, $do_mass_download);
 my $config = YAML::LoadFile( $config_path.'/config.yml' );
 my $agent_list = $config->{agent_list};
 
-
 =pod
 Method: suck
 	скачивает данные
@@ -34,7 +33,7 @@ Parameter:
     $url|($url,)
     скаляр или список
 Returns:
-	{ url => {status, data} }
+	{ url => { status, data, header } }
 	хеш с данными
 =cut
 
@@ -70,19 +69,22 @@ Returns:
 
 $do_download = sub ($$) {
 
-	my ( $data, $self, $url ) = ( undef, @_ ) ;
-
+	my ( $self, $url ) = ( @_ ) ;
+	my (  $data, $header );
+	
 # придется перенести создание объекта в процедуру, иначе получим замыкание в Multi
 	my $curl = WWW::Curl::Easy->new();
 # вот сюда пишем полученные данные	
 	open ( my $fh, '>', \$data );
+	open ( my $fh2, '>', \$header );
 
 	$curl->setopt(CURLOPT_URL,$url);
 	$curl->setopt(CURLOPT_WRITEDATA,\$fh);
-
+	$curl->setopt(CURLOPT_WRITEHEADER,\$fh2);
+		
 	#10.02.09 - добавка для вариантов с feedsportal.com, когда новости идут редиректом
 	$curl->setopt(CURLOPT_FOLLOWLOCATION,1); 
-	$curl->setopt(CURLOPT_MAXREDIRS,1);
+	$curl->setopt(CURLOPT_MAXREDIRS,2); # ДВА! иначе получаем только редирект
 
 	# 12.02.09 - пробуем избавится от зависаний на больших лентах типа коммерсанта
 	#$curl->setopt(CURLOPT_FAILONERROR,1); # вот этим не пользуйся, или отлуп на 301 редиректе обеспечен!
@@ -95,13 +97,13 @@ $do_download = sub ($$) {
 		( defined $self->agent_shuffle ? &$get_useragent() : $agent_list->[0] ) );
 
 # для мульти-интерфейса нам нужен сам объект и ссылка на typoglobe, тем и отличаем
-	return ( $curl, \$data ) if wantarray;
+	return ( $curl, \$data, \$header ) if wantarray;
 	
     $curl->perform;
 #   my $err = $curl->errbuf;
     my $info = $curl->getinfo(CURLINFO_RESPONSE_CODE);
 	
-	return { $url => {'status' => [$info], 'data' => $data }};
+	return { $url => {'status' => [$info], 'data' => $data, 'header' => $header }};
 };
 
 
@@ -121,9 +123,10 @@ $do_mass_download = sub ($$) {
 	
 	foreach my $url ( @$url_list ) {
 		
-		my ( $curl, $data ) = &$do_download( $self, $url );
+		my ( $curl, $data, $header ) = &$do_download( $self, $url );
 		$curl->setopt( CURLOPT_PRIVATE, ++$curl_id );
-		$easy->{$curl_id} = {'curl' => $curl, 'data' => $data }; #  ссылка на объект
+		$easy->{$curl_id} = {
+			'curl' => $curl, 'data' => $data, 'header' => $header }; #  ссылка на объект
 		$curlm->add_handle( $curl );
 	}
 
@@ -138,8 +141,9 @@ $do_mass_download = sub ($$) {
 						my $response = $actual_easy_handle->getinfo(CURLINFO_RESPONSE_CODE);
 						# точно, тут у нас была ссылка на скаляр, разыменовываем
 						my $data = ${$easy->{$id}{data}};
+						my $header = ${$easy->{$id}{header}};
 						$result->{$url_list->[($id-1)]} = {'status' => [$response],
-									'data' => $data };
+									'data' => $data, 'header' => $header };
 												
 						# вот это обязательно, а то получим перебор по памяти
 						delete $easy->{$id};
@@ -170,7 +174,6 @@ $get_useragent = sub (){
 
 
 1;
-
 
 __END__
 
@@ -209,7 +212,7 @@ Leech создан для упрощения скачивания чего-ли�
 Вызывается со скаляром или U<списоком>.
 На выходе B<всегда> получаем ссылку на хеш вида 
 	
-	{ url => { status => '', data => ''}}
+	{ url => { status => '', data => '', header => '' }}
 
 
 Сам модуль использует частный метод get_useragent - выбирает из списка произвольную строку идентификации агента, пользуйтесь этой фичей по собственному усмотрению.

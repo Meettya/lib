@@ -6,7 +6,7 @@ use utf8;
 
 our $VERSION = 1.2.1;
 
-use Encode qw(from_to);
+use Encode qw( from_to decode );
 use autouse 'Carp' => qw(carp croak);
 use XML::Bare;
 use HTTP::Date qw( parse_date str2time );
@@ -17,7 +17,6 @@ use WWW::Leech;
 
 # yes! we are have properies
 our $object_prototype = { 	
-			'encoding'			=> undef, 	# charset to encode
 			'parse_ro' 			=> undef,	# parse feed
 			'clean' 			=> undef,	# clear qw( description pubDate )
 						};
@@ -55,10 +54,9 @@ sub getFeed{
 
     	next unless ( $raw_feed->{$_}{status}[0] eq '200' );
 
-    	# encoding
-		&$encode_feed( $self, $raw_feed->{$_} ) 
-			if ( defined $self->encoding );
-
+    	# encoding to utf8
+		&$encode_feed( $self, $raw_feed->{$_} );
+    	
     	# parse
     	&$parse_feed( $self, $raw_feed->{$_} ) 
     		if ( defined $self->parse && $self->parse == 1 );
@@ -66,6 +64,7 @@ sub getFeed{
     	#clean
     	&$clean_feed( $self, $raw_feed->{$_} )
     		if ( defined $self->clean );
+		
 
     }
 
@@ -77,19 +76,17 @@ sub getFeed{
 Method:encode_feed
     делает перекодировку ленты
 Parameter:
-    $feed - хеш лент с сырыми данными
+    $feed - сырые данные
 Return:
-    $feed - хеш лент с распарсенными данными
+    $feed - перекодированные данные (utf8 && flag on) 
 =cut
 
 $encode_feed = sub ($$){
 
     my ( $self, $feed ) = ( @_ );  
     my $encode =  &$get_encode( $feed->{data} );   
-    if ( lc $encode ne lc $self->encoding ){
-    	from_to( $feed->{data}, $encode, $self->encoding );
-    	push @{$feed->{status}}, 'encoded';  
-    }
+    $feed->{data} = decode( $encode, $feed->{data} );
+    push @{$feed->{status}}, 'encoded';
     return $feed;
 };
 
