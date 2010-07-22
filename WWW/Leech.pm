@@ -19,6 +19,7 @@ our $object_prototype = {
 
 my $curlm = WWW::Curl::Multi->new();
 
+
 my ($do_download, $get_useragent, $do_mass_download);
 
 # конфиг берем из файлика, получая из $INC полный путь к каталогу
@@ -74,6 +75,7 @@ $do_download = sub ($$) {
 	
 # придется перенести создание объекта в процедуру, иначе получим замыкание в Multi
 	my $curl = WWW::Curl::Easy->new();
+
 # вот сюда пишем полученные данные	
 	open ( my $fh, '>', \$data );
 	open ( my $fh2, '>', \$header );
