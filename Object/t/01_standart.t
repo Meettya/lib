@@ -2,12 +2,13 @@
 
 use strict;
 
-use Test::More tests => 15;
+use Test::More qw(no_plan);
 
-use lib qw(../../);
+use lib qw(../);
 
-use_ok( 'Object::Botox', qw(new) );
-can_ok('Object::Botox', qw(new) );
+use_ok( 'Store::Local', qw(new) );
+can_ok('Store::Local', qw(new saveList getUniqueList) );
+
 
 {	package Parent;
 
@@ -61,20 +62,18 @@ can_ok('Object::Botox', qw(new) );
 	};
 		
 	my $foo = new Parent();
-	print "\nFirst object test:\n";
+	main::note ("First object test:");
 	&$make_test($foo,1);
 
 	my $bar = new Parent;	
-	print "\nSecond object test:\n";
+	main::note ("Second object test:");
 	&$make_test($bar,2);
-	print "\nPersistent data test:\n";
+	main::note ("Persistent data test:");
 	&$persistent_test($foo);
-
-	print Dumper($foo);
 
 	sub child_sub{
 		my $self = shift;
-		return "Yes, I can! ".$self->prop8;
+		return $self->prop8.'-2';
 	}
 
 
@@ -82,14 +81,9 @@ can_ok('Object::Botox', qw(new) );
 		my $self = shift;
 		return $self->prop5.' mutating';
 	}
-
-
-	print "Test new from object\n";
 	
 	my $grand_foo = new $foo;
-	
-	print Dumper($grand_foo);
-	
+	main::isa_ok $grand_foo, 'Parent', 'New from object';	
 
 	1;
 }
@@ -97,16 +91,10 @@ can_ok('Object::Botox', qw(new) );
 
 { package GrandChild;
 
+	my $baz = main::new_ok( 'Child' => [{prop1 => 888888, prop2 => 333}], 'GrandChild' );
 
-	use Data::Dumper;
-	my $baz = new Child({prop1 => 888888, prop2 => 333});
-	
-	print Dumper($baz);
-
-	print $baz->show_prop1,"\n";
-	
-	print $baz->child_sub."\n";
-	
-	print $baz->parent_sub."\n";
+	main::is  ( $baz->show_prop1, '888888', 'First sub' );
+	main::is  ( $baz->child_sub, 'tetete-2', 'Second sub' );
+	main::is  ( $baz->parent_sub, '55 mutating', 'Third sub' );	
 
 }

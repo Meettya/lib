@@ -7,115 +7,63 @@ use utf8;
 our $VERSION = 0.0.1;
 
 use autouse 'Carp' => qw(carp croak);
-use DBI;
-
-use Data::Dumper;
 
 use Object::Botox qw(new);
 
-# yes! we are have properies
 our $object_prototype = {
-						'dbh_ro' 	=> undef, 	# dbh object
-						'database_ro' 	=> undef,	# database prop
-						'table_ro'		=> undef,	# table for urls
-						};
+				'storehouse' => undef, # хранилище для ссылок - ссылка на объект с методами get_unique и save внутри. По сути - абстракция над любым хранилищем
+				};
 
-
-=pod
-Method: init
-	инициализирует коннект к базе и добавлет его к своему свойству(объекта).
-Parameter:
-    $url|($url,) - ссылки для проверки
-    скаляр или список
-Returns:
-    $url|($url,) - уникальные ссылки для обработки
-    скаляр или список
-=cut
-sub init{
-	my $self = shift;
+sub getUniqueURL($$){
 	
-	my $dbh = DBI->connect_cached("dbi:SQLite(sqlite_unicode=>1):dbname=".$self->database,"","",
-							{AutoCommit => 0, PrintError => 1}) or die $DBI::errstr;
-	$self->dbh($dbh);
-	return 1;
-}
-
-
-# по идее тут будет 2 метода - 
-# 1) проверка уникальности ссылок (списка ссылок)
-# 2) сохранение в базу ссылок, когда страница обработана, для проверки п.1
-
-
-=pod
-Method: getUniqueUrl
-	возвращет ссылки, являюшиеся уникальными
-Parameter:
-    $url|($url,) - ссылки для проверки
-    скаляр или список
-Returns:
-    $url|($url,) - уникальные ссылки для обработки
-    скаляр или список
-    ИЛИ undef при пустом входящем
-=cut
-sub getUniqueUrl{
-	my ( $result, $self, @urls ) = ( undef, @_ );
+	my ( $self, $in_urls ) = ( @_ );
+		
+	return undef if ( $#{$in_urls} == -1 );
 	
-	return undef if ( $#urls == -1 );
 	# жмем входяший список в уникальные
 	my %seen = ();
-	my @unique = grep { ! $seen{$_} ++ } @urls;
-	
-	my $placeholder = join (', ', split ('', ( '?' x ( $#unique + 1 ) ) ));	
-	my $sql = "SELECT DISTINCT url FROM ".$self->table." WHERE url IN ( $placeholder );";
-
-	my $dbh = $self->dbh;
-	my $exist_urls = $dbh->selectall_hashref( $sql, 'url', {}, @unique );
-	
-	# фильтруем данные, благо у нас есть хеш записей.
-	do { push @$result, $_ unless $exist_urls->{$_} } for @unique;
-	
-	return @$result;
+	my @unique = grep { ! $seen{$_} ++ } @$in_urls;
+			
+	return $self->storehouse()->get_unique( \@unique );
+		
 }
 
+sub saveProcessedURL($$){
+
+	my ( $self, $in_urls ) = ( @_ );
+	
+	return undef if ( $#{$in_urls} == -1 );
+		
+	return $self->storehouse()->save( $in_urls );
+	
+}
+
+
+__END__
+
+=encoding utf-8
 
 =pod
-Method: saveNewUrl
-	сохраняет в базе новые ссылки
-Parameter:
-    $url|($url,) - ссылки для проверки
-    скаляр или список
-Returns:
-    1 - успешно, undef - неуспешно
-Meditation:
-	с одной стороны sql-кусок в фильтре нуждается в ДБ объекте,
-	с другой стороны - а нужна ли такая глубокая абстракция?
-	- возрастание накладных расходов на передачу и ветвление 
-=cut
-sub saveNewUrl{
-	my ( $self, @urls ) = @_;
-	
-	my $dbh = $self->dbh;
-	my $sql = "INSERT INTO ".$self->table."(url) values (?);";
-	
-	my $sth = $dbh->prepare_cached($sql);
-	# теоретически это самый быстрый способ инсерта
-  	my $tuples = $sth->execute_array(
-      				{ ArrayTupleStatus => \my @tuple_status }, \@urls);
-  	if ( $tuples ) {
-		$dbh->commit();
-	}
-	else {
-		  for my $tuple (0..$#urls) {
-			  my $status = $tuple_status[$tuple];
-			  $status = [0, "Skipped"] unless defined $status;
-			  next unless ref $status;
-			  printf "Failed to insert (%s): %s\n",
-				  $urls[$tuple], $status->[1];
-		  }
-		  return undef;
-	 }	
-	return 1;	
-}
 
+=head1 NAME
 
-1;
+Filter::Url - служит для фильтрации ссылок.
+
+=head1 SYNOPSIS
+
+Filter::Url 
+
+=head1 DESCRIPTION
+
+Filter::Url решает проблему фильтрации задач, с целью исключения повторной обработки записей, идентифицируемых ссылками.
+
+Для этого модулю требуются следуюшие методы:
+
+	1) getUniqueURL - из списка ссылок делаем уникальный список с записями, которые еще не зафиксированы в системе.
+	2) saveProcessedURL - сохраняет в системе новые ссылки, которые были обработаны.
+	
+т.е. при создании объекта он должен получать ссылку на хранилище и взаимодействовать с ним с использованием стандартного интерфейса
+
+	get_unique и save , оба получают на вход ссылку на массив
+	
+Таким образом можно совершенно спокойно использовать ЛЮБОЕ хранилище для ссылок, реализовав его на том, что удобнее.

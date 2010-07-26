@@ -9,11 +9,10 @@ use Test::More qw(no_plan);
 use lib qw(../);
 
 
-use_ok( 'Filter::Url2', qw(new) );
-can_ok('Filter::Url2', qw(new getUniqueURL saveProcessedURL) );
+use_ok( 'Filter::Url', qw(new) );
+can_ok('Filter::Url', qw(new getUniqueURL saveProcessedURL) );
 
-ok( my $filter = Filter::Url2->new( 'storehouse' => MockStore->new() ), "create" );
-
+my $filter = new_ok( 'Filter::Url' => [{ 'storehouse' => MockStore->new() }] );
 
 my @list_test = qw(one two two three);
 my $unique_test = [qw(one two three)];
