@@ -9,7 +9,7 @@ use lib qw(../);
 use_ok( 'Store::Local', qw(new) );
 can_ok('Store::Local', qw(new saveList getUniqueList) );
 
-
+# делаем путь к базе независымым от точки запуска теста
 ( my $db_path = $INC{'Store/Local.pm'} ) =~ s/Local\.pm$// ;
 my $db_name = $db_path.'/t/spider.db' ;
 my $table_name = 'url_list';
