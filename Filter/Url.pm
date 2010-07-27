@@ -23,7 +23,7 @@ sub getUniqueURL($$){
 	# жмем входяший список в уникальные
 	my %seen = ();
 	my @unique = grep { ! $seen{$_} ++ } @$in_urls;
-			
+	
 	return $self->storehouse()->get_unique( \@unique );
 		
 }
@@ -33,7 +33,7 @@ sub saveProcessedURL($$){
 	my ( $self, $in_urls ) = ( @_ );
 	
 	return undef if ( $#{$in_urls} == -1 );
-		
+
 	return $self->storehouse()->save( $in_urls );
 	
 }

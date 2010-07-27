@@ -11,7 +11,7 @@ can_ok('Store::Local', qw(new saveList getUniqueList) );
 
 # делаем путь к базе независымым от точки запуска теста
 ( my $db_path = $INC{'Store/Local.pm'} ) =~ s/Local\.pm$// ;
-my $db_name = $db_path.'/t/spider.db' ;
+my $db_name = $db_path.'t/spider.db' ;
 my $table_name = 'url_list';
 			
 my $store = new_ok( 'Store::Local' => [{ database => $db_name ,
@@ -34,7 +34,7 @@ ok ( $store->saveList([qw( one two three two )]), "save" );
 #check getUniqueList
 subtest 'Check unuque' => sub {	
 	plan tests => 3;
-	ok ( ! $store->getUniqueList(), "void unique" );
+	ok( ! $store->getUniqueList(), "void unique" );
 	ok( ! $store->getUniqueList([qw( three two )]), "list unique 1" );
 	is_deeply ( $store->getUniqueList([qw( four three one )]), 
 											['four'], "list unique 2" );

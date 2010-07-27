@@ -2,12 +2,9 @@
 
 use strict;
 
-use Data::Dumper;
-
 use Test::More qw(no_plan);
 
 use lib qw(../);
-
 
 use_ok( 'Filter::Url', qw(new) );
 can_ok('Filter::Url', qw(new getUniqueURL saveProcessedURL) );
