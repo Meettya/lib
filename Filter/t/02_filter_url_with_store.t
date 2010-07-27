@@ -6,11 +6,11 @@ use lib qw(../);
 use Test::More qw(no_plan);
 
 use_ok( 'Filter::Url', qw(new) );
-use_ok( 'Filter::AdapterStoreLocal', qw(new) );
+use_ok( 'Filter::Adapter::StoreLocal', qw(new) );
 
 # делаем путь к базе независимым от точки запуска теста
 ( my $db_path = $INC{'Store/Local.pm'} ) =~ s/Local\.pm$// ;
-my $db_name = $db_path.'t/spider.db' ;
+my $db_name = $db_path.'t/test02.db' ;
 
 my $table_name = 'url_list';
 
@@ -18,7 +18,7 @@ my $table_name = 'url_list';
 # непонятные ошибки в 'simply unique' и 'save'
 ok ( !( -e $db_name && -f _ && -s _ ), 'DB not exists');
 
-my $store_adapter = new_ok( 'Filter::AdapterStoreLocal' =>
+my $store_adapter = new_ok( 'Filter::Adapter::StoreLocal' =>
 			[{ database =>  $db_name, table => $table_name }] );
 
 my $filter = new_ok( 'Filter::Url' => [{ 'storehouse' => $store_adapter }] );
@@ -38,8 +38,6 @@ is_deeply( $filter->getUniqueURL( ['four', @list_test] ),
 
 # YES! we are kill db after test! Live fast die young !!!
 `rm $db_name` if ( -e $db_name && -f _ && -s _ );
-
-
 
 
 __END__

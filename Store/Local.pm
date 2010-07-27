@@ -20,8 +20,8 @@ our $object_prototype = {
 						};
 
 my %err = ( 
-		db_name => 'Need database (name) for init Store::Local',
-		table_name => 'Need table (name) for init Store::Local'
+		db_name => 'Need database name for init Store::Local',
+		table_name => 'Need table name for init Store::Local'
 		);
 
 =pod
@@ -117,3 +117,7 @@ sub getUniqueList($$){
 }
 
 1;
+
+__END__
+
+Вот тут нужно подумать на тему логирования ошибок sql, наверное

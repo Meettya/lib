@@ -11,7 +11,7 @@ can_ok('Store::Local', qw(new saveList getUniqueList) );
 
 # делаем путь к базе независымым от точки запуска теста
 ( my $db_path = $INC{'Store/Local.pm'} ) =~ s/Local\.pm$// ;
-my $db_name = $db_path.'t/spider.db' ;
+my $db_name = $db_path.'t/test01.db' ;
 my $table_name = 'url_list';
 			
 my $store = new_ok( 'Store::Local' => [{ database => $db_name ,

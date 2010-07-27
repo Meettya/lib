@@ -15,7 +15,6 @@ my @list_test = qw(one two two three);
 my $unique_test = [qw(one two three)];
 
 
-
 my $unique_list = $filter->getUniqueURL(\@list_test);
 
 is_deeply( $unique_list, $unique_test, "simply unique" );
