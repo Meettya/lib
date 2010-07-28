@@ -6,7 +6,7 @@ use lib qw(../);
 use Test::More qw(no_plan);
 
 use_ok( 'Filter::Url', qw(new) );
-use_ok( 'Filter::Adapter::StoreLocal', qw(new) );
+use_ok( 'Store::Local', qw(new) );
 
 # делаем путь к базе независимым от точки запуска теста
 ( my $db_path = $INC{'Store/Local.pm'} ) =~ s/Local\.pm$// ;
@@ -14,17 +14,24 @@ my $db_name = $db_path.'t/test02.db' ;
 
 my $table_name = 'url_list';
 
+
 # ага, вот этот тест ОЧЕНЬ нужен, если не хочешь получить 
 # непонятные ошибки в 'simply unique' и 'save'
 ok ( !( -e $db_name && -f _ && -s _ ), 'DB not exists');
-
-my $store_adapter = new_ok( 'Filter::Adapter::StoreLocal' =>
+	
+my $store = new_ok( 'Store::Local' =>
 			[{ database =>  $db_name, table => $table_name }] );
 
-my $filter = new_ok( 'Filter::Url' => [{ 'storehouse' => $store_adapter }] );
+$store->init();			
 
-my @list_test = qw(one two two three);
-my $unique_test = [qw(one two three)];
+# сам себе адаптер, по сути - коллбек-функция хранилища
+my $filter = new_ok( 'Filter::Url' => [{ 'storehouse' => $store,
+			'save' => sub{ shift->saveList( @_ ) },
+			'get_unique' => sub{ shift->getUniqueList( @_ ) }
+}] );
+
+my @list_test = qw( one two three two );
+my $unique_test = [qw( one two three )];
 
 
 my $unique_list = $filter->getUniqueURL(\@list_test);
@@ -51,3 +58,5 @@ __END__
 	Наверное адаптер должен быть вынесен в отдельный класс, только не совсем понятно, к какому классу он должен относится. С одной стороны - это обертка к хранилищу, с другой - она нужна ДЛЯ фильтра. Похоже пихать ее надо в фильтр, подумать.
 	
 	Вынес к фильтру.
+	
+	ХА! прописав соответствие коллбеков вызовам интерфейса сделал ненужным наличие адаптора!

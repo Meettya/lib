@@ -9,7 +9,10 @@ use lib qw(../);
 use_ok( 'Filter::Url', qw(new) );
 can_ok('Filter::Url', qw(new getUniqueURL saveProcessedURL) );
 
-my $filter = new_ok( 'Filter::Url' => [{ 'storehouse' => MockStore->new() }] );
+my $filter = new_ok( 'Filter::Url' => [{ 'storehouse' => MockStore->new(),
+			'save' => sub{ shift->save_mock( @_ ) },
+			'get_unique' => sub{ shift->get_unique_mock( @_ ) }
+			}] );
 
 my @list_test = qw(one two two three);
 my $unique_test = [qw(one two three)];
@@ -37,7 +40,7 @@ sub new{
     return bless( { store => undef }, shift );
 }
 
-sub save{
+sub save_mock{
 		
 		my $self = shift;
 		my $urls = shift;
@@ -51,7 +54,7 @@ sub save{
 		return 1;
 }
 
-sub get_unique{
+sub get_unique_mock{
 		
 		my $self = shift;
 		my $urls = shift;
