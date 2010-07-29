@@ -43,8 +43,8 @@ sub init{
 	$self->dbh($dbh);
 	
 	my $sql = 'CREATE TABLE IF NOT EXISTS '.$self->table.'
-				(url text NOT NULL,
-				cdate TEXT  DEFAULT (CURRENT_TIMESTAMP));';
+				(url TEXT NOT NULL,
+				cdate TEXT DEFAULT (CURRENT_TIMESTAMP));';
 
 	$dbh->do( $sql ) or croak $dbh->errstr;
 	$dbh->commit() or croak $dbh->errstr;

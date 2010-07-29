@@ -43,11 +43,9 @@ sub suck{
 	my ( $self, @url ) = @_ ;
 
 	if ( $#url == 0 ){
-		print $url[0],"\n";
 		return &$do_download( $self, $url[0] );
 	}
 	elsif ( $#url > 0 ){
-		print 'Downloading array ['.join(', ', @url).']',"\n";
 		return &$do_mass_download( $self, \@url );
 	}
 	else {
@@ -71,7 +69,8 @@ Returns:
 $do_download = sub ($$) {
 
 	my ( $self, $url ) = ( @_ ) ;
-	my (  $data, $header );
+	
+	my (  $data, $header ) = ( '','' ); # so... it for fix 'Use of uninitialized value in open' bug
 	
 # придется перенести создание объекта в процедуру, иначе получим замыкание в Multi
 	my $curl = WWW::Curl::Easy->new();
