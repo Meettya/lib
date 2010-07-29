@@ -11,7 +11,8 @@ my $leech = new_ok( 'WWW::Leech' => [{ 'agent_shuffle' => 1}] );
 
 # делаем путь к файлам независимым от точки запуска теста
 ( my $file_path = $INC{'WWW/Leech.pm'} ) =~ s/Leech\.pm$// ;
-# генерируем 2 ссылки
+
+# генерируем 2 файла ( путь, создаем файлы, заполняем контентом ) *потом снесем
 my $file_name = [ map { $_ = 'file://'.$ENV{PWD}.'/'.$file_path."t/example$_.txt" }
 							(1..2) ];
 
@@ -24,7 +25,6 @@ foreach ( 0..1 ){
 	close $fh;
 } 
 
-
 my $data1 = $leech->suck( $file_name->[0] );
 my $data2 = $leech->suck( $file_name->[0], $file_name->[1] );
 
@@ -35,6 +35,7 @@ subtest 'Data loading' => sub {
 	is( $data2->{$file_name->[1]}{data}, $content_file->[1], "file 2 data 2 compare" );
 };
 
+# убираем за собой
 map{ s#^file://## ; `rm $_` if ( -e $_ && -f _ && -s _ )} ( @$file_name );
 
 SKIP: {
@@ -58,7 +59,6 @@ SKIP: {
 	unlike ( $data1->{$host->[0]}{header},		qr/^$/, 'Download check: header' );
 	
 	}
-
 
 
 __END__
