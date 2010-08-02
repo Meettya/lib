@@ -26,8 +26,8 @@ $store->init();
 
 # сам себе адаптер, по сути - коллбек-функция хранилища
 my $filter = new_ok( 'Filter::Url' => [{ 'storehouse' => $store,
-			'save' => sub{ shift->saveList( @_ ) },
-			'get_unique' => sub{ shift->getUniqueList( @_ ) }
+			'do_save' => sub{ shift->saveList( @_ ) },
+			'do_get_unique' => sub{ shift->getUniqueList( @_ ) }
 }] );
 
 my @list_test = qw( one two three two );

@@ -10,8 +10,8 @@ use_ok( 'Filter::Url', qw(new) );
 can_ok('Filter::Url', qw(new getUniqueURL saveProcessedURL) );
 
 my $filter = new_ok( 'Filter::Url' => [{ 'storehouse' => MockStore->new(),
-			'save' => sub{ shift->save_mock( @_ ) },
-			'get_unique' => sub{ shift->get_unique_mock( @_ ) }
+			'do_save' => sub{ shift->save_mock( @_ ) },
+			'do_get_unique' => sub{ shift->get_unique_mock( @_ ) }
 			}] );
 
 my @list_test = qw(one two two three);

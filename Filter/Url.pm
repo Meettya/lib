@@ -12,8 +12,8 @@ use Object::Botox qw(new);
 our $object_prototype = {
 				'storehouse_ro' => undef, # хранилище для ссылок - ссылка на объект с методами get_unique и save внутри. По сути - абстракция над любым хранилищем
 				# вот тут тоже кое-что интересное - это коллбек для функций сохранения и выборки уникальных записей.
-				'save_ro' => undef, # колбек для функции сохранения
-				'get_unique_ro' => undef, # колбек для функции выбора уникальных
+				'do_save_ro' => undef, # колбек для функции сохранения
+				'do_get_unique_ro' => undef, # колбек для функции выбора уникальных
 				};
 
 sub getUniqueURL($$){
@@ -26,7 +26,7 @@ sub getUniqueURL($$){
 	my %seen = ();
 	my @unique = grep { ! $seen{$_} ++ } @$in_urls;
 	
-	return $self->get_unique()->( $self->storehouse(), \@unique );
+	return $self->do_get_unique()->( $self->storehouse(), \@unique );
 	
 }
 
@@ -36,7 +36,7 @@ sub saveProcessedURL($$){
 	
 	return undef if ( $#{$in_urls} == -1 );
 
-	return $self->save()->( $self->storehouse(), $in_urls );
+	return $self->do_save()->( $self->storehouse(), $in_urls );
 	
 }
 
