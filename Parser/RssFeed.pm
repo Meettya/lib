@@ -1,4 +1,4 @@
-package WWW::FeedParser;
+package Parser::RssFeed;
 
 use strict;
 use warnings;

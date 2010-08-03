@@ -15,7 +15,7 @@ my %code_map = qw( x-mac-cyrillic CP1251 IBM866 CP866 );
 sub detect ($){
 
 	my $enc = Encode::Detect::Detector::detect(shift);
-	return $code_map{$enc} || $enc;
+	return !defined $enc ? undef : $code_map{$enc} || $enc;
 
 }
 

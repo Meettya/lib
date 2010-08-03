@@ -6,13 +6,13 @@ use utf8;
 
 use Test::More qw(no_plan);
 
-use_ok( ' WWW::FeedParser', qw(new) );
+use_ok( 'Parser::RssFeed', qw(new) );
 
-my $feed_parser = new_ok( 'WWW::FeedParser' => 
+my $feed_parser = new_ok( 'Parser::RssFeed' => 
 				[{ clean => ['description', 'pubDate']} ] );
 
 # делаем путь к файлам независимым от точки запуска теста
-( my $file_path = $INC{'WWW/FeedParser.pm'} ) =~ s/FeedParser\.pm$// ;
+( my $file_path = $INC{'Parser/RssFeed.pm'} ) =~ s/RssFeed\.pm$// ;
 my $file_name = $ENV{PWD}.'/'.$file_path.'t/rss1.rss';
 
 # yap! 
@@ -66,3 +66,10 @@ close $fh;
 
 ok ( ( $rss_parsed, $rss_error ) = $feed_parser->ParseRSS( $rss_source ), 'Parse RSS ok!' );
 unlike( $rss_parsed->[1]{title}, qr/Китайцы/, 'Test "Encode error" ok!');
+
+##################
+note("Test on bad file - 3");
+
+$rss_source = '';
+ok ( ( $rss_parsed, $rss_error ) = $feed_parser->ParseRSS( $rss_source ), 'Parse RSS ok!' );
+is(  $rss_error, 'encode fall' , 'Test "Encode error" on empty ok!');
