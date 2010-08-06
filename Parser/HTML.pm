@@ -21,24 +21,73 @@ our $object_prototype = {
 						
 my ( $get_encode );
 
-sub ParseHTML{
-	my ( $self, $data_in ) = ( @_ );
+=nb
+Method:ParseHTML
+   парсит ОДНУ страницу, возвращая в скаляре строку с данными (т.е. текст) 
+   сам делает перекодировку в perl-utf8
+Parameter:
+    $data_in - страница в сырце как текст скаляра
+    @xpath_string - строк(а/и) поиска
+Return:
+   	$result - скаляр с текстом или пустышка с типом ошибки
+=cut
+
+sub ParseHTML(@){
+	my ( $result, $self, $data_in, @xpath_string ) = ( undef, @_ );
 
 	my $encode =  &$get_encode( $data_in ); 
+	
+	do { return wantarray?( undef, 'encode fall' ): undef } unless $encode;
+	
 	$data_in = decode( $encode , $data_in ); 
 	
 	my $tree = HTML::TreeBuilder::XPath->new();
-	$tree->parse_content( $data_in );
-
-     
-	my $p = $tree->findnodes_as_string( 
-     '//div[@class="vvodka"]/descendant-or-self::* | //div[@class="vvodka"]/following-sibling::* ');
-     
+	
+	eval {
+		local $SIG{__WARN__} = sub{}; #Temporarily suppress warnings
+		$tree->parse_content( $data_in );
+	};
+	
+ 	if ( $@ ){
+ 	    # anyway, clean up ! kill the tree !
+ 		$tree->delete();
+		undef $tree;
+ 		return wantarray?( undef, 'parse fall' ): undef;
+	}
+	
+	do{return wantarray?( undef, 'xpatch empty' ): undef} if 
+			( !defined $xpath_string[0] );
+	# вот тут собираем все имеющиеся у нас образцы в любом варианте вызова
+	my @xpatch_all = $#xpath_string > 0 ? @xpath_string :
+			ref $xpath_string[0] eq 'ARRAY' ? 
+				@{$xpath_string[0]} : ( $xpath_string[0] );
+	
+	my @temp_result;
+	
+	foreach my $val ( @xpatch_all ){
+			push @temp_result , $tree->findnodes_as_string( $val );
+	}
+	
+	if ( $#temp_result > 0 ){	
+			( $result ) = ( sort { length $b <=> length $a } @temp_result );
+	}
+	else {
+		$result = $temp_result[0];
+	}
+	
+    # anyway, clean up ! kill the tree !
 	$tree->delete();
-     
-	return $p;
+	undef $tree;
+	undef @temp_result;
+	
+ 	if ( !$result ){
+		return wantarray?( undef, 'xpatch mismatch' ): undef;
+	}
+	else{
+		return wantarray?( $result, undef ): $result;
+	}
+	
 }
-
 
 
 =nb
@@ -67,3 +116,13 @@ __END__
 
 Так. Самое интенесное, конечно же, будет в этом модуле, посколько здесь будем пытаться парсить HTML.
 Итого, мы ВЫДЕРГИВАЕМ здесь контент, а фильтр будет лишь чистить результат до более приличного состояния
+
+Что теперь у нас тут делается - мы скармливаем модулю скаляр, получая в скаляре результат (при вызове списком - результат + ошибка )
+
+Разбор делается HTML::TreeBuilder::XPath - не супер быстро, зато надежно и эффективно с точки зрения описания что и как нам надо найти.
+Рубит вместе с будкой, т.е. дальше нужно пустить фильтр по результатам, для очистки инфы от лишнего хлама. Фильтр будем уже на регулярках писать.
+
+ToDo - подумать куда пихнуть описания , возможно имеет смысл давать несколько шаблонов для поиска, пусть проходится по ним и возврашает что найдет ( как вариант - сравнивать длину возврата )
+Как в leech перевести в виртуальный метод, а интерфейс привязать к вызову?...
+
+Сделал проще, теперь можно отдавать несколько шаблонов, оно само вернет максимальной длины строку.
