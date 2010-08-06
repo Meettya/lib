@@ -80,7 +80,7 @@ sub ParseHTML(@){
 	undef $tree;
 	undef @temp_result;
 	
- 	if ( !$result ){
+ 	if ( !$result || $result eq '' ){
 		return wantarray?( undef, 'xpatch mismatch' ): undef;
 	}
 	else{
