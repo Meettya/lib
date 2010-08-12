@@ -10,6 +10,7 @@ use XML::Bare;
 use HTTP::Date qw( parse_date str2time );
 
 use Encode::Detect::Straighten;
+use Encode::Detect::Detector;
 
 our $VERSION = 0.0.2;
 
@@ -113,7 +114,7 @@ $get_encode = sub ($){
 
     my $data = shift;
     $data =~ /^[^>]+encoding\s?=\s?('|")(.+?)\1/;
-	return $2 || detect( $data );
+	return $2 || do_rectify( detect( $data ) );
 	
 };
 

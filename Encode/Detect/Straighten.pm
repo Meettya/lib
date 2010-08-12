@@ -3,19 +3,17 @@ package Encode::Detect::Straighten;
 use warnings;
 use strict;
 
-our $VERSION = 0.0.1;
+our $VERSION = 0.1.1;
 
 use Exporter 'import';
-our @EXPORT = qw(detect);
-
-use base qw(Encode::Detect::Detector);
+our @EXPORT = qw(do_rectify);
 
 my %code_map = qw( x-mac-cyrillic CP1251 IBM866 CP866 );
 
-sub detect ($){
+sub do_rectify ($){
 
-	my $enc = Encode::Detect::Detector::detect(shift);
-	return !defined $enc ? undef : $code_map{$enc} || $enc;
+	my $data_in = shift;
+	return !defined $data_in ? undef : $code_map{$data_in} || $data_in;
 
 }
 
@@ -31,18 +29,19 @@ __END__
 
 =head1 NAME
 
-Encode::Detect::Straighten - wrapper to Encode::Detect::Detector.
+Encode::Detect::Straighten - cleaner to Encode::Detect::Detector.
 
 =head1 VERSION
 
-B<$VERSION 0.0.1>
+B<$VERSION 0.1.1>
 
 =head1 SYNOPSIS
 
-Обертка над Encode::Detect::Detector, возвращающая "канонические" имена кодировок.
-
+Дополнение для Encode::Detect::Detector, возвращающее "канонические" имена кодировок.
+	
 	use Encode::Detect::Straighten;
-	print detect($octet); 
+	use Encode::Detect::Detector;
+	print do_rectify( detect( $octet ) ); 
 	# if $octet recognized as 'x-mac-cyrillic' retun replaced 'CP1251'
 
 =head1 DESCRIPTION
@@ -52,7 +51,10 @@ B<$VERSION 0.0.1>
 	x-mac-cyrillic
 
 Encode::Detect::Straighten заменят возвращаемую Detector-ом кодировку на понимаемую encode.
-Экспортируется единственная функция detect, которая и проверят кодировку на необходимость замены.
+
+	CP1251
+
+Экспортируется единственная функция do_rectify, которая и проверят кодировку на необходимость замены, возвращая "выпрямленную" по необходимости.
 
 
 =head1 AUTOR	

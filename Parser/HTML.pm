@@ -7,17 +7,14 @@ use utf8;
 use Encode qw(decode);
 use autouse 'Carp' => qw(carp croak);
 
-use Encode::Detect::Straighten qw(detect);
+use Encode::Detect::Straighten;
+use Encode::Detect::Detector;
 
 our $VERSION = 0.0.2;
 
 use Object::Botox qw(new);
 
 use HTML::TreeBuilder::XPath;
-
-our $object_prototype = { 	
-					'foo' => undef, # just mock
-						};
 						
 my ( $get_encode );
 
@@ -100,12 +97,11 @@ Method : get_encode
 
 $get_encode = sub ($){
 
-	my %code_map = qw( x-mac-cyrillic CP1251 IBM866 CP866 );
 	my $data = shift;
 
     $data =~ /<\s*meta[^>]+charset\s*=\s*(.+?)\s*(?:'|")[^>]+>/;
 
-	return !$1 ? detect( $data ) : $code_map{$1} || $1;
+	return $1 ? do_rectify( $1 ) : do_rectify( detect( $data ) );
 	
 };
 
