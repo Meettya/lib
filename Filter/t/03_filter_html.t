@@ -28,17 +28,33 @@ my $filter = [
 		[ '<\s*a[^>]*href\s*=\s*(["\'])?(.+?)\1(?:>|\s+[^>]*>)',
 			 sub{"<a href=\"$2\">"} ],
 		# удаляем ссылкУ после последнего абзаца (удалит только последнюю)
-		[ '\s*<\s*a[^>]+>(?!.*<\s*a[^>]+>).*<\s*/\s*a\s*>\s*$' ], 
+		[ '\s*<\s*a[^>]+>(?!.*<\s*a[^>]+>).*<\s*/\s*a\s*>\s*$' ],
 		
 			];
 
 my $html_cleaner = new_ok( 'Filter::HTML' => 
-				[{'filter' => $filter , show_error => 0 }] );
+				[{ 'filter' => $filter , show_error => 0, clean_tail => 1 }] );
 
-ok ( my $result = $html_cleaner->DoClearHTML( decode_utf8( $data->[0] ) ), 'Data clean ok');
+ok ( my $result = $html_cleaner->DoClearHTML( decode_utf8( $data->{raw}[0] ) ), 'Data clean worked');
+
+subtest 'Test clean function' => sub {	
+	plan tests => 3;
+	
+	foreach (0..2){
+		my $test_str = decode_utf8( $data->{clean}[$_] );
+		chomp $test_str;
+		is ( $html_cleaner->DoClearHTML( decode_utf8( $data->{raw}[$_] ) ), $test_str, 'Clean matched with standart '. ( $_ + 1 )  );
+	}
+	
+};
+
+# ну, стоит убедится что оно не пытается распознать что-то не utf8
+subtest 'Error handling' => sub {	
+	plan tests => 2;
+	ok ( my ( $result, $err ) = $html_cleaner->DoClearHTML( $data->{raw}[0] ),
+		'Non-unf8 parse ');
+	is ( $err, 'not utf8', 'Not utf8 error check');
+};
 
 
-
-print  Dumper( encode_utf8($result) );
-
-pass('fake');
+# print  Dumper( encode_utf8($result) );
