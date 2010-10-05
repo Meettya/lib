@@ -1,20 +1,17 @@
 #!/opt/local/bin/perl -w
 
 use strict;
-
-use Test::More qw(no_plan);
-
 use lib qw(../);
 
-use_ok( 'Store::Local', qw(new) );
-can_ok('Store::Local', qw(new saveList getUniqueList) );
-
+use Test::More qw( no_plan );
 
 {	package Parent;
 
 	use Object::Botox qw(new);
-		
-	our $object_prototype = { 'prop1_ro' => 1 , 'prop2' => 'abcde' };
+
+	sub _prototype_{	
+			return {'prop1_ro' => 1 , 'prop2' => 'abcde' };
+	}
 	
 	sub show_prop1{ # It`s poinlessly - indeed property IS A accessor itself
 		my ( $self ) = @_;
@@ -39,8 +36,12 @@ can_ok('Store::Local', qw(new saveList getUniqueList) );
 	
 	use base 'Parent';
 	
-	our $object_prototype = {  %$Parent::object_prototype,
-					'prop1_ro' => 44, 'prop5' => 55 , 'prop8_ro' => 'tetete' };
+	sub _prototype_{	
+					return {'prop1_ro' => 44,
+							'prop5' => 55,
+							'prop8_ro' => 'tetete'};
+	}
+
 	
 	my $make_test = sub {	
 		my ( $self, $i ) = @_ ;		
@@ -60,13 +61,13 @@ can_ok('Store::Local', qw(new saveList getUniqueList) );
 		main::ok($self->prop1 == 5 && $self->prop2 eq 'wxyz1', 
 					"Persistent data test pass");	
 	};
-		
-	my $foo = new Parent();
-	main::note ("First object test:");
+	
+	main::note ('First object test:');
+	my $foo = main::new_ok( 'Parent' => [] ,"First object create" );
 	&$make_test($foo,1);
 
-	my $bar = new Parent;	
-	main::note ("Second object test:");
+	main::note ('Second object test:');
+	my $bar = main::new_ok( 'Parent' => [] ,"Second object create" );
 	&$make_test($bar,2);
 	main::note ("Persistent data test:");
 	&$persistent_test($foo);
@@ -90,11 +91,32 @@ can_ok('Store::Local', qw(new saveList getUniqueList) );
 
 
 { package GrandChild;
-
+	
 	my $baz = main::new_ok( 'Child' => [{prop1 => 888888, prop2 => 333}], 'GrandChild' );
 
 	main::is  ( $baz->show_prop1, '888888', 'First sub' );
 	main::is  ( $baz->child_sub, 'tetete-2', 'Second sub' );
 	main::is  ( $baz->parent_sub, '55 mutating', 'Third sub' );	
 
+	1;
 }
+
+
+{ package ErrOne;
+	use Object::Botox qw(new);
+		sub _prototype_{ 'prop3_1' };
+	1;
+}
+
+{ package ErrTwo;
+	use Object::Botox qw(new);
+		sub _prototype_{ 'prop3_1' => 33, 'prop3_2' };
+	1;
+}
+	
+package main;
+
+
+ok( !eval{ ErrOne->new()} && $@ , "Single proto error cached \n".$@ );
+
+ok( !eval{ ErrTwo->new()} && $@ , "Odd element proto error cached \n".$@ );
