@@ -11,7 +11,7 @@ our $VERSION = 0.2.4;
 use Object::Botox qw(new);
 
 # попробуем использовать ссылку на массив правил очистки
-our $object_prototype = {
+sub _prototype_{
 				'filter' => undef, # хранилище для ссылок на правила очистки 
 				'show_error' => undef, # показывать ошибки, по умолчанию НЕ ПОКАЗЫВАТЬ
 				'clean_tail' => undef, # чистить в хвосте лишние пробелы

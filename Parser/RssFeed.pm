@@ -17,7 +17,7 @@ our $VERSION = 0.0.2;
 use Object::Botox qw(new);
 
 
-our $object_prototype = { 	
+sub _prototype_{ 	
 					'clean'	=> undef,	# clean qw( description pubDate )
 					# pubDate - гарантирует нам, что дата будет актуальна
 						};

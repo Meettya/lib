@@ -13,7 +13,7 @@ use autouse 'Carp' => qw(carp croak);
 
 use Object::Botox qw(new);
 
-our $object_prototype = { 	
+sub _prototype_{ 	
 				'agent_shuffle'	=> undef, 	# do shuffle useragent
 					};
 

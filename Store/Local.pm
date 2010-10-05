@@ -13,7 +13,7 @@ use Object::Botox qw(new);
 use DBI;
 
 # yes! we are have properies
-our $object_prototype = {
+sub _prototype_{
 						'dbh_ro' 	=> undef, 	# dbh object
 						'database_ro' 	=> undef,	# database prop
 						'table_ro'		=> undef,	# table for urls
